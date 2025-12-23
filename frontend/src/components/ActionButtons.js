@@ -48,8 +48,11 @@ function ActionButtons({ availableActions, onAction, gameState, player, anybodyA
       ))}
       {/* Kiểm tra an toàn trước khi truy cập hasSwitched */}
       {!player.hasSwitched && !anybodyAllIn && (
-        <button className="switch-btn" onClick={onSwitchInit}>
-          Đổi Bài
+        <button 
+          className="action-button switch-button" 
+          onClick={onSwitchInit}
+        >
+          🔄 Switch
         </button>
       )}
     </div>

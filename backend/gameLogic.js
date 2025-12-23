@@ -78,10 +78,10 @@ function createGameState() {
  */
 function addPlayer(gameState, socketId, nickname) {
   if (!gameState.players.player1) {
-    gameState.players.player1 = { socketId, nickname };
+    gameState.players.player1 = { socketId, nickname, hasSwitched: false };
     return 'player1';
   } else if (!gameState.players.player2) {
-    gameState.players.player2 = { socketId, nickname };
+    gameState.players.player2 = { socketId, nickname, hasSwitched: false };
     // Don't auto-start, wait for both players to be ready
     return 'player2';
   } else {
@@ -166,6 +166,10 @@ function startNewHand(gameState) {
   gameState.winner = null;
   gameState.loser = null;
   gameState.handResult = null;
+
+  // Reset switch status
+  if (gameState.players.player1) gameState.players.player1.hasSwitched = false;
+  if (gameState.players.player2) gameState.players.player2.hasSwitched = false;
 
   // Collect ante from both players
   const anteP1 = Math.min(ANTE_AMOUNT, gameState.player1Bullets);
@@ -489,19 +493,6 @@ function getAvailableActions(gameState) {
   return actions;
 }
 
-const createPlayer = (id, name, chips) => ({
-    id,
-    name,
-    chips,
-    hand: [],
-    hasSwitched: false, // Trạng thái đã đổi bài hay chưa
-});
-
-const canPlayerSwitch = (gameState) => {
-    // Không cho phép đổi nếu có bất kỳ ai đã All-in
-    return !Object.values(gameState.players).some(p => p.isAllIn);
-};
-
 module.exports = {
   PHASES,
   ACTIONS,
@@ -514,7 +505,5 @@ module.exports = {
   startNewHand,
   processAction,
   executeShoot,
-  getAvailableActions,
-  createPlayer,
-  canPlayerSwitch
+  getAvailableActions
 };

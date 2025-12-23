@@ -57,12 +57,16 @@ function getGameStateForSocket(socketId) {
       player1: gameState.players.player1 ? {
         nickname: gameState.players.player1.nickname,
         bullets: gameState.player1Bullets,
-        committed: gameState.player1Committed
+        committed: gameState.player1Committed,
+        hasSwitched: gameState.players.player1.hasSwitched,
+        isAllIn: gameState.player1Bullets === 0
       } : null,
       player2: gameState.players.player2 ? {
         nickname: gameState.players.player2.nickname,
         bullets: gameState.player2Bullets,
-        committed: gameState.player2Committed
+        committed: gameState.player2Committed,
+        hasSwitched: gameState.players.player2.hasSwitched,
+        isAllIn: gameState.player2Bullets === 0
       } : null
     },
     communityCards: gameState.communityCards,
@@ -282,6 +286,83 @@ io.on('connection', (socket) => {
   });
 
   /**
+   * EVENT: requestSwitchOptions
+   * Player wants to see 3 random cards to switch
+   */
+  socket.on('requestSwitchOptions', () => {
+    const role = getPlayerRole(socket.id);
+    const player = gameState.players[role];
+    
+    if (!player || player.hasSwitched) {
+      socket.emit('error', { message: 'Cannot switch cards' });
+      return;
+    }
+
+    // Check if anyone is all-in
+    const anybodyAllIn = gameState.player1Bullets === 0 || gameState.player2Bullets === 0;
+    if (anybodyAllIn) {
+      socket.emit('error', { message: 'Cannot switch when someone is all-in' });
+      return;
+    }
+
+    // Get 3 random cards from deck (don't remove them yet)
+    const options = [];
+    const tempDeck = [...gameState.deck];
+    for (let i = 0; i < 3 && tempDeck.length > 0; i++) {
+      const randomIndex = Math.floor(Math.random() * tempDeck.length);
+      options.push(tempDeck.splice(randomIndex, 1)[0]);
+    }
+    
+    socket.emit('switchOptionsReceived', options);
+  });
+
+  /**
+   * EVENT: executeSwitch
+   * Player confirms switching a card
+   */
+  socket.on('executeSwitch', (data) => {
+    const { cardIndex, newCard } = data;
+    const role = getPlayerRole(socket.id);
+    const player = gameState.players[role];
+    
+    if (!player || player.hasSwitched) {
+      socket.emit('error', { message: 'Cannot switch cards' });
+      return;
+    }
+
+    const anybodyAllIn = gameState.player1Bullets === 0 || gameState.player2Bullets === 0;
+    if (anybodyAllIn) {
+      socket.emit('error', { message: 'Cannot switch when someone is all-in' });
+      return;
+    }
+
+    const hand = gameState[`${role}Hand`];
+    if (!hand || cardIndex < 0 || cardIndex >= hand.length) {
+      socket.emit('error', { message: 'Invalid card index' });
+      return;
+    }
+
+    // Perform the switch
+    const oldCard = hand[cardIndex];
+    hand[cardIndex] = newCard;
+    
+    // Remove newCard from deck and put oldCard back
+    gameState.deck = gameState.deck.filter(c => c.rank !== newCard.rank || c.suit !== newCard.suit);
+    gameState.deck.push(oldCard);
+    
+    player.hasSwitched = true;
+    
+    // Send success to the player
+    socket.emit('switchSuccess');
+    
+    // Broadcast state update (to update hasSwitched status)
+    broadcastGameState();
+    
+    // Notify others that someone switched (without revealing what)
+    socket.broadcast.emit('player_action_notify', { role, action: 'switched' });
+  });
+
+  /**
    * EVENT: disconnect
    * Player disconnects
    */
@@ -300,34 +381,6 @@ io.on('connection', (socket) => {
     
     broadcastGameState();
   });
-
-  socket.on('requestSwitchOptions', (roomId) => {
-    const game = games[roomId];
-    if (game && !game.players[socket.id].hasSwitched && canPlayerSwitch(game)) {
-        // Lấy 3 lá bài ngẫu nhiên từ phần còn lại của bộ bài
-        const options = game.deck.slice(0, 3); 
-        socket.emit('switchOptionsReceived', options);
-    }
-});
-
-socket.on('executeSwitch', ({ roomId, cardIndex, newCard }) => {
-    const game = games[roomId];
-    const player = game.players[socket.id];
-    if (game && player && !player.hasSwitched && canPlayerSwitch(game)) {
-        const oldCard = player.hand[cardIndex];
-        // Thay thế bài trong tay
-        player.hand[cardIndex] = newCard;
-        // Cập nhật lại bộ bài (bỏ lá mới ra, cho lá cũ vào hoặc hủy)
-        game.deck = game.deck.filter(c => c.rank !== newCard.rank || c.suit !== newCard.suit);
-        game.deck.push(oldCard);
-        player.hasSwitched = true;
-
-        // Gửi cập nhật riêng cho người chơi đó
-        socket.emit('updateMyHand', player.hand);
-        // Thông báo cho phòng là người này đã đổi bài (không lộ bài)
-        io.to(roomId).emit('playerActionNotify', { playerId: socket.id, action: 'switched' });
-    }
-});
 });
 
 // Health check endpoint

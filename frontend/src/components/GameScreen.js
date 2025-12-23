@@ -10,13 +10,16 @@ import PlayerPanel from './PlayerPanel';
 import ActionButtons from './ActionButtons';
 import BulletMeter from './BulletMeter';
 import ShootingScreen from './ShootingScreen';
+import Card from './Card';
 
 function GameScreen({ nickname }) {
   const { socket, connected } = useSocket();
   const [gameState, setGameState] = useState(null);
   const [shootResult, setShootResult] = useState(null);
   const [message, setMessage] = useState('');
-  const [switchState, setSwitchState] = useState({ active: false, options: [], discardIndex: null });
+  const [switchStep, setSwitchStep] = useState(null); // 'select_hand' | 'select_option'
+  const [selectedHandIdx, setSelectedHandIdx] = useState(null);
+  const [switchOptions, setSwitchOptions] = useState([]);
   const hasJoinedRef = React.useRef(false);
 
   // Set up socket listeners (only once)
@@ -104,31 +107,28 @@ function GameScreen({ nickname }) {
     }
   };
 
-  const handleSwitchInit = () => {
-    // Bước 1: Chọn lá bài trong tay muốn bỏ đi
-    setSwitchState({ ...switchState, active: true, step: 'select_discard' });
-  };
+  const handleSwitchInit = () => setSwitchStep('select_hand');
 
-  const handleSelectDiscard = (index) => {
-    setSwitchState({ ...switchState, discardIndex: index, step: 'loading_options' });
-    socket.emit('requestSwitchOptions', roomId);
+  const handleHandCardClick = (idx) => {
+    if (switchStep === 'select_hand') {
+      setSelectedHandIdx(idx);
+      socket.emit('requestSwitchOptions');
+      setSwitchStep('loading');
+    }
   };
 
   useEffect(() => {
+    if (!socket) return;
     socket.on('switchOptionsReceived', (options) => {
-      setSwitchState(prev => ({ ...prev, options, step: 'select_new' }));
+      setSwitchOptions(options);
+      setSwitchStep('select_option');
     });
-    return () => socket.off('switchOptionsReceived');
-  }, []);
-
-  const handleConfirmSwitch = (newCard) => {
-    socket.emit('executeSwitch', { 
-        roomId, 
-        cardIndex: switchState.discardIndex, 
-        newCard 
-    });
-    setSwitchState({ active: false, options: [], discardIndex: null });
-  };
+    socket.on('switchSuccess', () => setSwitchStep(null));
+    return () => {
+      socket.off('switchOptionsReceived');
+      socket.off('switchSuccess');
+    };
+  }, [socket]);
 
   if (!connected) {
     return (
@@ -157,7 +157,8 @@ function GameScreen({ nickname }) {
   }
 
   // Get current player info
-  const currentPlayer = gameState.players[socket.id];
+  const currentPlayer = gameState.players[gameState.yourRole];
+  const anybodyAllIn = Object.values(gameState.players || {}).some(p => p && p.isAllIn);
 
   return (
     <div className="game-screen">
@@ -223,6 +224,9 @@ function GameScreen({ nickname }) {
             availableActions={gameState.availableActions}
             onAction={handleAction}
             gameState={gameState}
+            player={currentPlayer}
+            anybodyAllIn={anybodyAllIn}
+            onSwitchInit={handleSwitchInit}
           />
         )}
 
@@ -320,6 +324,65 @@ function GameScreen({ nickname }) {
           </div>
         )}
       </div>
+
+      {/* Switch Card UI */}
+      {switchStep && (
+        <div className="switch-overlay">
+          <div className="switch-modal">
+            <h3>{switchStep === 'select_hand' ? "Chọn 1 lá bài của bạn để đổi" : "Chọn 1 lá bài mới"}</h3>
+            
+            {/* Hiển thị Pool bài trên bàn (Community Cards) */}
+            <div className="reference-section">
+              <p>Bài trên bàn (Pool):</p>
+              <div className="card-row">
+                {gameState.communityCards && gameState.communityCards.length > 0 ? (
+                  gameState.communityCards.map((card, i) => (
+                    <div key={i} className="card-wrapper">
+                      <Card card={card} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-cards">Chưa có bài trên bàn</div>
+                )}
+              </div>
+            </div>
+
+            {/* Hiển thị bài hiện tại của người chơi */}
+            <div className="reference-section">
+              <p>Bài của bạn:</p>
+              <div className="card-row">
+                {gameState.yourHand && gameState.yourHand.map((card, i) => (
+                  <div 
+                    key={i} 
+                    className={`card-wrapper ${selectedHandIdx === i ? 'selected' : ''} ${switchStep === 'select_hand' ? 'clickable' : ''}`}
+                    onClick={() => handleHandCardClick(i)}
+                  >
+                    <Card card={card} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Hiển thị 3 lá bài ngẫu nhiên để chọn */}
+            {switchStep === 'select_option' && (
+              <div className="reference-section">
+                <p>Chọn 1 lá bài mới từ bộ bài:</p>
+                <div className="card-row">
+                  {switchOptions.map((card, i) => (
+                    <div key={i} className="card-wrapper clickable" onClick={() => socket.emit('executeSwitch', { cardIndex: selectedHandIdx, newCard: card })}>
+                      <Card card={card} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="switch-actions">
+              <button className="action-button cancel-button" onClick={() => setSwitchStep(null)}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
