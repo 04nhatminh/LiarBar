@@ -112,10 +112,28 @@ function evaluateHand(cards) {
   const isStraightHand = isStraight(cards);
   const rankCounts = countRanks(cards);
   const counts = Object.values(rankCounts).sort((a, b) => b - a);
-  const values = Object.keys(rankCounts).map(Number).sort((a, b) => b - a);
+  const uniqueValsDesc = Object.keys(rankCounts).map(Number).sort((a, b) => b - a);
+
+  // Build groups sorted by (count desc, value desc) so we can create a tie-breaker array
+  const groups = Object.keys(rankCounts).map(v => ({
+    v: Number(v),
+    count: rankCounts[v]
+  }));
+  groups.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    return b.v - a.v;
+  });
+
+  // Helper: highest card of a straight (handle wheel A-2-3-4-5)
+  const straightHigh = (cards) => {
+    const vals = cards.map(c => c.value).sort((a, b) => a - b);
+    const wheel = JSON.stringify([2, 3, 4, 5, 14]);
+    if (JSON.stringify(vals) === wheel) return 5;
+    return Math.max(...vals);
+  };
 
   // Royal Flush: A-K-Q-J-T all same suit
-  if (isFlushHand && isStraightHand && values[0] === 14 && values[4] === 10) {
+  if (isFlushHand && isStraightHand && uniqueValsDesc[0] === 14 && uniqueValsDesc[4] === 10) {
     return {
       rank: HAND_RANKS.ROYAL_FLUSH,
       value: [14],
@@ -127,25 +145,29 @@ function evaluateHand(cards) {
   if (isFlushHand && isStraightHand) {
     return {
       rank: HAND_RANKS.STRAIGHT_FLUSH,
-      value: values,
+      value: [straightHigh(cards)],
       description: 'Straight Flush'
     };
   }
 
   // Four of a Kind
   if (counts[0] === 4) {
+    const quad = groups.find(g => g.count === 4).v;
+    const kicker = groups.find(g => g.count === 1).v;
     return {
       rank: HAND_RANKS.FOUR_OF_KIND,
-      value: values,
+      value: [quad, kicker],
       description: 'Four of a Kind'
     };
   }
 
   // Full House
   if (counts[0] === 3 && counts[1] === 2) {
+    const trip = groups.find(g => g.count === 3).v;
+    const pair = groups.find(g => g.count === 2).v;
     return {
       rank: HAND_RANKS.FULL_HOUSE,
-      value: values,
+      value: [trip, pair],
       description: 'Full House'
     };
   }
@@ -154,7 +176,7 @@ function evaluateHand(cards) {
   if (isFlushHand) {
     return {
       rank: HAND_RANKS.FLUSH,
-      value: values,
+      value: uniqueValsDesc,
       description: 'Flush'
     };
   }
@@ -163,34 +185,40 @@ function evaluateHand(cards) {
   if (isStraightHand) {
     return {
       rank: HAND_RANKS.STRAIGHT,
-      value: values,
+      value: [straightHigh(cards)],
       description: 'Straight'
     };
   }
 
   // Three of a Kind
   if (counts[0] === 3) {
+    const trip = groups.find(g => g.count === 3).v;
+    const kickers = groups.filter(g => g.count === 1).map(g => g.v).sort((a, b) => b - a);
     return {
       rank: HAND_RANKS.THREE_OF_KIND,
-      value: values,
+      value: [trip, ...kickers],
       description: 'Three of a Kind'
     };
   }
 
   // Two Pair
   if (counts[0] === 2 && counts[1] === 2) {
+    const pairs = groups.filter(g => g.count === 2).map(g => g.v).sort((a, b) => b - a);
+    const kicker = groups.find(g => g.count === 1).v;
     return {
       rank: HAND_RANKS.TWO_PAIR,
-      value: values,
+      value: [pairs[0], pairs[1], kicker],
       description: 'Two Pair'
     };
   }
 
   // Pair
   if (counts[0] === 2) {
+    const pair = groups.find(g => g.count === 2).v;
+    const kickers = groups.filter(g => g.count === 1).map(g => g.v).sort((a, b) => b - a);
     return {
       rank: HAND_RANKS.PAIR,
-      value: values,
+      value: [pair, ...kickers],
       description: 'Pair'
     };
   }
@@ -198,7 +226,7 @@ function evaluateHand(cards) {
   // High Card
   return {
     rank: HAND_RANKS.HIGH_CARD,
-    value: values,
+    value: uniqueValsDesc,
     description: 'High Card'
   };
 }
