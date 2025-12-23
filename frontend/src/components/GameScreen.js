@@ -328,59 +328,62 @@ function GameScreen({ nickname }) {
       {/* Switch Card UI */}
       {switchStep && (
         <div className="switch-overlay">
-          <div className="switch-modal">
-            <h3>{switchStep === 'select_hand' ? "Chọn 1 lá bài của bạn để đổi" : "Chọn 1 lá bài mới"}</h3>
-            
-            {/* Hiển thị Pool bài trên bàn (Community Cards) */}
-            <div className="reference-section">
-              <p>Bài trên bàn (Pool):</p>
-              <div className="card-row">
-                {gameState.communityCards && gameState.communityCards.length > 0 ? (
-                  gameState.communityCards.map((card, i) => (
-                    <div key={i} className="card-wrapper">
-                      <Card card={card} />
+            <div className="switch-modal">
+                <h2>{switchStep === 'select_hand' ? "CHỌN 1 LÁ BÀI CỦA BẠN ĐỂ ĐỔI" : "CHỌN 1 LÁ BÀI MỚI"}</h2>
+                
+                {/* Thêm class pool-highlight để làm nổi bật */}
+                <div className="reference-section pool-highlight">
+                    <p className="section-title">Bài trên bàn (Pool):</p>
+                    <div className="card-row">
+                        {gameState.communityCards && gameState.communityCards.length > 0 ? (
+                            gameState.communityCards.map((card, i) => (
+                                <Card key={i} card={card} />
+                            ))
+                        ) : (
+                            <p>Chưa có bài trên bàn</p>
+                        )}
                     </div>
-                  ))
-                ) : (
-                  <div className="no-cards">Chưa có bài trên bàn</div>
-                )}
-              </div>
-            </div>
-
-            {/* Hiển thị bài hiện tại của người chơi */}
-            <div className="reference-section">
-              <p>Bài của bạn:</p>
-              <div className="card-row">
-                {gameState.yourHand && gameState.yourHand.map((card, i) => (
-                  <div 
-                    key={i} 
-                    className={`card-wrapper ${selectedHandIdx === i ? 'selected' : ''} ${switchStep === 'select_hand' ? 'clickable' : ''}`}
-                    onClick={() => handleHandCardClick(i)}
-                  >
-                    <Card card={card} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Hiển thị 3 lá bài ngẫu nhiên để chọn */}
-            {switchStep === 'select_option' && (
-              <div className="reference-section">
-                <p>Chọn 1 lá bài mới từ bộ bài:</p>
-                <div className="card-row">
-                  {switchOptions.map((card, i) => (
-                    <div key={i} className="card-wrapper clickable" onClick={() => socket.emit('executeSwitch', { cardIndex: selectedHandIdx, newCard: card })}>
-                      <Card card={card} />
-                    </div>
-                  ))}
                 </div>
-              </div>
-            )}
-            
-            <div className="switch-actions">
-              <button className="action-button cancel-button" onClick={() => setSwitchStep(null)}>Hủy</button>
+
+                {/* Hiển thị bài hiện tại của người chơi */}
+                <div className="reference-section">
+                  <p>Bài của bạn:</p>
+                  <div className="card-row">
+                    {gameState.yourHand && gameState.yourHand.map((card, i) => (
+                      <div 
+                        key={i} 
+                        className={`card-wrapper ${selectedHandIdx === i ? 'selected' : ''} ${switchStep === 'select_hand' ? 'clickable' : ''}`}
+                        onClick={() => handleHandCardClick(i)}
+                      >
+                        <Card card={card} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Hiển thị 3 lá bài ngẫu nhiên để chọn */}
+                {switchStep === 'select_option' && (
+                  <div className="reference-section">
+                    <p>Chọn 1 lá bài mới từ bộ bài:</p>
+                    <div className="card-row">
+                      {switchOptions.map((card, i) => (
+                        <div key={i} className="card-wrapper clickable" onClick={() => socket.emit('executeSwitch', { cardIndex: selectedHandIdx, newCard: card })}>
+                          <Card card={card} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Chỉ hiển thị nút Hủy khi đang ở bước chọn bài trên tay */}
+                {switchStep === 'select_hand' && (
+                    <div className="modal-actions">
+                        <button className="action-btn cancel-btn" onClick={() => setSwitchStep(null)}>Hủy</button>
+                    </div>
+                )}
+                
+                {/* Khi đã hiện 3 lá option, không có nút Hủy, người dùng bắt buộc phải chọn */}
             </div>
-          </div>
         </div>
       )}
     </div>
