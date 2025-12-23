@@ -1,0 +1,147 @@
+/**
+ * Multi-Player Test Styles
+ */
+
+.multi-test {
+  min-height: 100vh;
+  background: #000;
+  color: #fff;
+  padding: 1rem;
+}
+
+.test-controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 2px solid #fff;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10000;
+}
+
+.test-controls h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+}
+
+.add-player-btn {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  color: #000;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-player-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+.player-count {
+  margin-left: auto;
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.test-grid {
+  margin-top: 5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.test-player-window {
+  border: 3px solid #fff;
+  background: #0a0a0a;
+  min-height: 600px;
+  position: relative;
+}
+
+.test-player-header {
+  background: #fff;
+  color: #000;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.remove-player-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.remove-player-btn:hover {
+  transform: scale(1.2);
+}
+
+.test-player-window .game-screen {
+  min-height: auto;
+  height: 100%;
+}
+
+.test-player-window .game-layout {
+  min-height: auto;
+  padding: 1rem;
+}
+
+.test-player-window .bullet-meters {
+  position: static;
+  transform: none;
+  flex-direction: row;
+  margin: 1rem 0;
+  left: auto;
+  top: auto;
+}
+
+.test-player-window .action-buttons {
+  position: static;
+  transform: none;
+  margin: 1rem 0;
+}
+
+.test-player-window .phase-indicator {
+  position: static;
+  transform: none;
+  margin-bottom: 1rem;
+}
+
+.test-player-window .shoot-container {
+  position: static;
+  transform: none;
+  margin: 1rem 0;
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 5rem;
+  font-size: 1.3rem;
+  color: #555;
+}
+
+.empty-state p {
+  margin: 1rem 0;
+}
+
+@media (max-width: 1400px) {
+  .test-grid {
+    grid-template-columns: 1fr;
+  }
+}
