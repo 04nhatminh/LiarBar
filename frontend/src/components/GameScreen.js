@@ -183,14 +183,14 @@ function GameScreen({ nickname }) {
           return opponent ? (
             <PlayerPanel
               player={opponent}
-              isActive={gameState.activePlayer === opponentRole}
+              isCurrentTurn={gameState.activePlayer === opponentRole}
               position="top"
               hand={
                 (gameState.phase === 'SHOWDOWN' || gameState.phase === 'SHOOTING' || gameState.phase === 'GAME_OVER') 
                   ? gameState[`${opponentRole}Hand`] 
-                  : null
+                  : [null, null]
               }
-              isOpponent={true}
+              isMe={false}
             />
           ) : null;
         })()}
@@ -210,10 +210,11 @@ function GameScreen({ nickname }) {
           return you ? (
             <PlayerPanel
               player={you}
-              isActive={gameState.activePlayer === yourRole}
+              isCurrentTurn={gameState.activePlayer === yourRole}
               position="bottom"
               hand={gameState.yourHand}
-              isOpponent={false}
+              handStrength={gameState.yourHandStrength}
+              isMe={true}
             />
           ) : null;
         })()}
@@ -329,7 +330,10 @@ function GameScreen({ nickname }) {
       {switchStep && (
         <div className="switch-overlay">
             <div className="switch-modal">
-                <h2>{switchStep === 'select_hand' ? "CHỌN 1 LÁ BÀI CỦA BẠN ĐỂ ĐỔI" : "CHỌN 1 LÁ BÀI MỚI"}</h2>
+                <h2>
+                  {switchStep === 'select_hand' ? "CHỌN 1 LÁ BÀI CỦA BẠN ĐỂ ĐỔI" : 
+                   switchStep === 'loading' ? "ĐANG LẤY BÀI MỚI..." : "CHỌN 1 LÁ BÀI MỚI"}
+                </h2>
                 
                 {/* Thêm class pool-highlight để làm nổi bật */}
                 <div className="reference-section pool-highlight">
@@ -373,6 +377,10 @@ function GameScreen({ nickname }) {
                       ))}
                     </div>
                   </div>
+                )}
+
+                {switchStep === 'loading' && (
+                  <div className="loading-spinner">Đang tải...</div>
                 )}
                 
                 {/* Chỉ hiển thị nút Hủy khi đang ở bước chọn bài trên tay */}

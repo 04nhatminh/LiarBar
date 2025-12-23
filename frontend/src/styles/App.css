@@ -240,6 +240,34 @@
   letter-spacing: 0.1em;
 }
 
+.hand-strength-badge {
+  position: absolute;
+  right: -140px; /* Đẩy ra bên phải panel */
+  top: 50%;
+  transform: translateY(-50%);
+  
+  border: 3px solid #ff4757;
+  color: #ff4757;
+  padding: 10px 20px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  z-index: 100;
+  white-space: nowrap;
+  
+  /* Hiệu ứng rung nhẹ để tăng tính kịch tính */
+  animation: badge-glow 2s infinite;
+}
+
+@keyframes badge-glow {
+  0% { box-shadow: 0 0 5px #ff4757; transform: translateY(-50%) scale(1); }
+  50% { box-shadow: 0 0 20px #ff4757; transform: translateY(-50%) scale(1.05); }
+  100% { box-shadow: 0 0 5px #ff4757; transform: translateY(-50%) scale(1); }
+}
+
 /* ========== TABLE ========== */
 .table {
   width: 100%;
@@ -396,6 +424,38 @@
 .action-all_in:hover {
   background: #ffaa00;
   color: #000;
+}
+
+/* ========== HAND STRENGTH ========== */
+.cards-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hand-strength-badge {
+  position: absolute;
+  right: -180px; /* Đẩy ra ngoài bên phải */
+  top: 50%;
+  transform: translateY(-50%);
+  border: 3px solid #ff3333;
+  color: #ff3333;
+  padding: 0.5rem 1rem;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  background: rgba(255, 51, 51, 0.1);
+  box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+  white-space: nowrap;
+  animation: pulse-red 2s infinite;
+  z-index: 100;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
 }
 
 /* ========== BULLET METER ========== */
@@ -922,4 +982,32 @@
 /* Hiệu ứng cho các lá bài trong pool khi đang ở chế độ đổi bài */
 .pool-highlight .card {
     filter: drop-shadow(0 0 5px rgba(241, 196, 15, 0.5));
+}
+
+.cards-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hand-strength-badge {
+    border: 3px solid #ff4757; /* Màu đỏ nổi bật */
+    color: #ff4757;
+    padding: 8px 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    border-radius: 4px;
+    background: rgba(255, 71, 87, 0.1);
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+    margin-left: 10px;
+    white-space: nowrap;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 71, 87, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
 }

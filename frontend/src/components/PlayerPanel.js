@@ -6,51 +6,48 @@
 import React from 'react';
 import Card from './Card';
 
-function PlayerPanel({ player, isActive, position, hand, isOpponent }) {
-  if (!player) {
+const PlayerPanel = ({ player, isMe, isCurrentTurn, hand, handStrength }) => {
+    if (!player) {
+        return (
+            <div className={`player-panel empty`}>
+                <div className="waiting-text">Waiting for player...</div>
+            </div>
+        );
+    }
+
+    // Use the hand prop if provided, otherwise fallback to player.hand (if it exists)
+    const displayHand = hand || player.hand || [];
+
     return (
-      <div className={`player-panel player-panel-${position} empty`}>
-        <div className="waiting-text">Waiting for player...</div>
-      </div>
+        <div className={`player-panel ${isCurrentTurn ? 'active' : ''}`}>
+            <div className="player-info">
+                <div className="player-nickname">{player.nickname}</div>
+                <div className="player-bullets">
+                    Remaining bullets: {player.bullets} / 8
+                </div>
+                <div className="player-committed">
+                    Bet: {player.committed}
+                </div>
+            </div>
+
+            <div className="hand-container">
+                <div className="cards-row">
+                    {displayHand.map((card, i) => (
+                        <Card key={i} card={card} faceDown={!card} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Hiển thị độ mạnh bài (nằm trong DOM nhưng sẽ dùng CSS đưa ra ngoài) */}
+            {handStrength && (
+                <div className="hand-strength-badge">
+                    {handStrength}
+                </div>
+            )}
+
+            {isCurrentTurn && <div className="active-indicator">YOUR TURN</div>}
+        </div>
     );
-  }
-
-  return (
-    <div className={`player-panel player-panel-${position} ${isActive ? 'active' : ''}`}>
-      <div className="player-info">
-        <div className="player-nickname">{player.nickname}</div>
-        <div className="player-bullets">
-          Remaining bullets: {player.bullets} / 8
-        </div>
-        <div className="player-committed">
-          Bet: {player.committed}
-        </div>
-      </div>
-
-      <div className="player-hand">
-        {hand ? (
-          hand.map((card, index) => (
-            <Card 
-              key={`${card.rank}-${card.suit}`} // Unique key để trigger animation
-              card={card} 
-              // Chỉ thêm hiệu ứng flip nếu là bài của đối thủ (lúc showdown)
-              className={isOpponent ? "flip-in" : ""}
-              // Stagger delay để lật từng lá một
-              style={isOpponent ? { animationDelay: `${index * 0.15}s` } : {}}
-            />
-          ))
-        ) : isOpponent ? (
-          // Show face-down cards for opponent (Hidden state)
-          <>
-            <Card faceDown={true} />
-            <Card faceDown={true} />
-          </>
-        ) : null}
-      </div>
-
-      {isActive && <div className="active-indicator">YOUR TURN</div>}
-    </div>
-  );
 }
 
 export default PlayerPanel;

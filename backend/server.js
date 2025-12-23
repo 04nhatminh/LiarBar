@@ -7,6 +7,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
+const { evaluateHand } = require('./pokerEval');
 
 const {
   PHASES,
@@ -22,6 +23,8 @@ const {
   executeShoot,
   getAvailableActions
 } = require('./gameLogic');
+
+const { findBestHand } = require('./pokerEval');
 
 // Initialize Express app
 const app = express();
@@ -83,9 +86,25 @@ function getGameStateForSocket(socketId) {
   if (role === 'player1') {
     state.yourHand = gameState.player1Hand;
     state.availableActions = gameState.activePlayer === 'player1' ? getAvailableActions(gameState) : [];
+    
+    // Calculate hand strength
+    if (gameState.player1Hand && gameState.player1Hand.length > 0) {
+      const bestHand = findBestHand(gameState.player1Hand, gameState.communityCards);
+      if (bestHand) {
+        state.yourHandStrength = bestHand.description;
+      }
+    }
   } else if (role === 'player2') {
     state.yourHand = gameState.player2Hand;
     state.availableActions = gameState.activePlayer === 'player2' ? getAvailableActions(gameState) : [];
+    
+    // Calculate hand strength
+    if (gameState.player2Hand && gameState.player2Hand.length > 0) {
+      const bestHand = findBestHand(gameState.player2Hand, gameState.communityCards);
+      if (bestHand) {
+        state.yourHandStrength = bestHand.description;
+      }
+    }
   }
 
   // Reveal all hands at showdown or after
@@ -118,6 +137,38 @@ function broadcastGameState() {
     socket.emit('game_state', state);
   });
 }
+
+// Tìm hàm gửi gameState cho người chơi, thường là trong socket.on('gameStateUpdate') hoặc tương tự
+const sendGameState = (roomId) => {
+    const game = games[roomId];
+    if (!game) return;
+
+    Object.keys(game.players).forEach(socketId => {
+        const player = game.players[socketId];
+        let handStrength = "";
+
+        // Chỉ tính toán độ mạnh nếu người chơi có bài và đã có bài trên bàn
+        if (player.hand && player.hand.length === 2) {
+            const evaluation = evaluateHand(player.hand, game.communityCards || []);
+            handStrength = evaluation.name; // Ví dụ: "Pair", "Flush"
+        }
+
+        // Gửi gameState tùy chỉnh cho từng người (để bảo mật bài)
+        const filteredState = {
+            ...game,
+            players: Object.keys(game.players).reduce((acc, id) => {
+                acc[id] = {
+                    ...game.players[id],
+                    // Chỉ gửi handStrength cho chính chủ
+                    handStrength: id === socketId ? handStrength : null,
+                    hand: id === socketId || game.showdown ? game.players[id].hand : [null, null]
+                };
+                return acc;
+            }, {})
+        };
+        io.to(socketId).emit('gameStateUpdate', filteredState);
+    });
+};
 
 // Socket.io connection handler
 io.on('connection', (socket) => {
