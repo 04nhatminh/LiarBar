@@ -8,7 +8,7 @@ import { io } from 'socket.io-client';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'ws://192.168.89.113:3001';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'ws://localhost:3001';
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
