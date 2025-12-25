@@ -1,6 +1,6 @@
 # LiarBar - 1v1 Poker Roulette Game
 
-Play here: [Clone Liar Bar by Kaizen]([https://clone-liar-bar.vercel.app/)
+Play here: [Clone Liar Bar by Kaizen](https://clone-liar-bar.vercel.app/)
 
 A real-time multiplayer poker game combining Texas Hold'em mechanics with Russian Roulette death mechanics.
 
