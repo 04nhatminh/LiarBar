@@ -1,5 +1,10 @@
 # LiarBar - 1v1 Poker Roulette Game
 
+Disclaimer: This is a non-commercial fan-made project created for learning purposes.
+Inspired by [Liar's Bar](https://store.steampowered.com/app/3097560/Liars_Bar/) by [Curve Animation](https://store.steampowered.com/curator/45224432).
+All rights to the original game, names, and trademarks belong to their respective owners.
+If you enjoy the original game, please support the developers by purchasing it on Steam.
+
 Play here: [Clone Liar Bar by Kaizen](https://clone-liar-bar.vercel.app/)
 
 A real-time multiplayer poker game combining Texas Hold'em mechanics with Russian Roulette death mechanics.
